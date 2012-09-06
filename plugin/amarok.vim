@@ -579,11 +579,11 @@ endfunction
 " UpdateStatus {{{1
 "   Get current track, then highlight it.
 function! s:UpdateStatus()
-    echo "UpdateStatus"
     call s:GetCurrentTrack()
     echo s:amarok_current_track
 	highlight MyGroup ctermbg=green guibg=green
 	execute "match MyGroup /" . s:amarok_current_track . "/"
+    redraw
 endfunction
 " }}}1
 

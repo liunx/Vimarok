@@ -111,11 +111,11 @@ function! s:OpenWindow(flags) abort
         if winnr() != tagbarwinnr && jump
             call s:winexec(tagbarwinnr . 'wincmd w')
         endif
-        call s:LogDebugMessage("OpenWindow finished, Tagbar already open")
+        call s:LogDebugMessage("OpenWindow finished, PlayList already open")
         return
     endif
 
-    " Expand the Vim window to accomodate for the Tagbar window if requested
+    " Expand the Vim window to accomodate for the PlayList window if requested
     if g:tagbar_expand && !s:window_expanded && has('gui_running')
         let &columns += g:tagbar_width + 1
         let s:window_expanded = 1
@@ -170,7 +170,7 @@ function! s:InitWindow(autoclose) abort
     " off, and then for every appended line (like with :put).
     setlocal foldmethod&
     setlocal foldexpr&
-    setlocal statusline=Tagbar
+    setlocal statusline=[PlayList]
 
     " Script-local variable needed since compare functions can't
     " take extra arguments
@@ -237,7 +237,7 @@ function! s:CloseWindow() abort
         endif
     endif
 
-    " If the Vim window has been expanded, and Tagbar is not open in any other
+    " If the Vim window has been expanded, and PlayList is not open in any other
     " tabpages, shrink the window again
     if s:window_expanded
         let tablist = []
@@ -266,7 +266,7 @@ function! s:ZoomWindow() abort
 endfunction
 
 " s:CorrectFocusOnStartup() {{{2
-" For whatever reason the focus will be on the Tagbar window if
+" For whatever reason the focus will be on the PlayList window if
 " tagbar#autoopen is used with a FileType autocommand on startup and
 " g:tagbar_left is set. This should work around it by jumping to the window of
 " the current file after startup.
@@ -297,7 +297,7 @@ function! s:StartDebug(filename) abort
 
     " Check whether the log file could be created
     if !filewritable(s:debug_file)
-        echomsg 'Tagbar: Unable to create log file ' . s:debug_file
+        echomsg 'PlayList: Unable to create log file ' . s:debug_file
         let s:debug_file = ''
         return
     endif
