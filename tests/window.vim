@@ -141,6 +141,14 @@ function! s:CloseWindow() abort
 
 endfunction
 
+" s:UpdateWindow() {{{2
+function! s:UpdateWindow() abort
+    let plistwinnr = bufwinnr('[PlayList]')
+    if plistwinnr == -1
+        return
+    endif
+endfunction
+
 " Helper functions {{{1
 " s:winexec() {{{2
 function! s:winexec(cmd) abort
