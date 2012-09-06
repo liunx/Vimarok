@@ -105,6 +105,8 @@ function! s:InitWindow() abort
 
     let &cpoptions = cpoptions_save
 
+    call s:CreateAutocommands()
+
 endfunction
 
 " s:CloseWindow() {{{2
@@ -147,6 +149,18 @@ function! s:UpdateWindow() abort
     if plistwinnr == -1
         return
     endif
+    echo "UpdateWindow"
+endfunction
+
+" s:CreateAutocommands() {{{2
+function! s:CreateAutocommands() abort
+    augroup TagbarAutoCmds
+        autocmd!
+        autocmd CursorHold * call
+                    \ s:UpdateWindow()
+
+    augroup END
+
 endfunction
 
 " Helper functions {{{1

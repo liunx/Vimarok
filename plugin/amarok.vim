@@ -543,7 +543,6 @@ function! s:TogglePlayList()
     " if the buffer window exist, then close
     if w_sl != -1
         execute w_sl . 'wincmd w'
-        au! test
         return
     endif
 
