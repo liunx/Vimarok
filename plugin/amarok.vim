@@ -620,8 +620,9 @@ try:
     bus = dbus.SessionBus()
     amarok = bus.get_object("org.kde.amarok",
                 "/TrackList")
+    help_len = vim.eval('s:amarok_help_len')
     line = vim.eval('s:amarok_play_track_num')
-    amarok.PlayTrack(int(line))
+    amarok.PlayTrack(int(line) - int(help_len) - 1)
 except dbus.exceptions.DBusException:
     vim.command("echohl WarningMsg | echo \"amarok not launch!\"
                 \ | echohl None")
