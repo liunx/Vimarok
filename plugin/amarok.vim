@@ -3,7 +3,7 @@
 " Description: Show playlist of amarok and control it via dbus-python.
 " Author:      Lei Liu <liunx163@163.com>
 " Licence:     Vim licence
-" Website:     
+" Website:     https://github.com/liunx/Vimarok
 " Version:     0.1.0
 " Note:        This plugin's window manage function was heavily inspired by
 "              the 'Tagbar' & 'Taglist' plugin by Jan Larres & Yegappan
@@ -542,7 +542,6 @@ if !exists('g:amarok_playlist_left')
 endif
 " }}}1
 
-
 " ---------------------------------------------------------------------
 " script variables {{{1
 let s:amarok_current_track = ""
@@ -612,7 +611,8 @@ try:
     title = meta['title']
     vim.command("let s:amarok_current_track = \"" + str(cur + 1) 
                 \+ ":" + title.encode('utf-8') + "\"")
-    vim.command("let s:amarok_current_pos = " + str(cur + 1)) 
+    help_len = vim.eval('s:amarok_help_len')
+    vim.command("let s:amarok_current_pos = " + str(cur + 1 + int(help_len))) 
 except dbus.exceptions.DBusException:
     vim.command("echohl WarningMsg | echo \"amarok not launch!\"
                 \ | echohl None")
@@ -888,8 +888,8 @@ function! s:UpdatePlayList() abort
     let savewin = bufwinnr('%')
     call s:winexec(winnr . 'wincmd w')
     setlocal modifiable
+    silent 0put = '\" Press F1 for help'
     call s:DisPlayList()
-    0,1d
     setlocal nomodifiable
 
     " jump back
@@ -932,6 +932,7 @@ function! s:MapKeys() abort
     nnoremap <script> <silent> <buffer> R    :call <SID>ToggleRandom()<CR>
     nnoremap <script> <silent> <buffer> <CR>    :call <SID>PlayTrack()<CR>
     nnoremap <script> <silent> <buffer> <Space>    :call <SID>Pause()<CR>
+    nnoremap <script> <silent> <buffer> <F1>    :call <SID>ToggleHelp()<CR>
 endfunction
 " Helper functions {{{1
 " s:winexec() {{{2
@@ -960,8 +961,59 @@ function! s:QuitIfOnlyWindow() abort
     endif
 endfunction
 
+" s:ShowHelp() {{{2
+function! s:ShowHelp() abort
+    if !s:amarok_toggle_help
+        silent 0put = '\" Press F1 for help'
+        let s:amarok_help_len = 2
+        let s:amarok_toggle_help = 1
+    else
+        silent 0put = '\" PlayList Keybindings'
+        silent put = '\"'
+        silent put = '\" >  : play next track'
+        silent put = '\" <  : play previous track'
+        silent put = '\" ]  : play forward'
+        silent put = '\" [  : play backward'
+        silent put = '\" +  : volume up'
+        silent put = '\" -  : volume down'
+        silent put = '\" p  : play'
+        silent put = '\" s  : stop'
+        silent put = '\" r  : toggle single track repeat'
+        silent put = '\" m  : toggle mute'
+        silent put = '\" o  : show amarok OSD'
+        silent put = '\" $  : stop after current track'
+        silent put = '\" L  : toggle play list loop mode'
+        silent put = '\" R  : toggle play list random mode'
+        silent put = '\" <CR>   : play track'
+        silent put = '\" <Space> : switch between play & pause'
+        silent put = '\" F1 : toggle the help contents'
+        let s:amarok_help_len = 20
+        let s:amarok_toggle_help = 0
+    endif
+endfunction
+
+" s:ToggleHelp() {{{2
+let s:amarok_help_len = 2
+let s:amarok_toggle_help = 0
+function! s:ToggleHelp() abort
+    match none
+    let lazyredraw_save = &lazyredraw
+    set lazyredraw
+    let eventignore_save = &eventignore
+    set eventignore=all
+    setlocal modifiable
+
+    silent %delete _
+    call s:ShowHelp()
+    call s:DisPlayList()
+    setlocal nomodifiable
+    execute 1
+    let &lazyredraw  = lazyredraw_save
+    let &eventignore = eventignore_save
+    redraw
+endfunction
 " Global commands {{{1
-command! ToggleWindow call s:ToggleWindow()
+command! TogglePlayList call s:ToggleWindow()
 
 " Modeline {{{1
 " vim: ts=8 sw=4 sts=4 et foldenable foldmethod=marker foldcolumn=1
