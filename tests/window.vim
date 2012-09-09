@@ -19,8 +19,8 @@
 " ============================================================================
 
 if v:version < 700
-  echohl WarningMsg | echo 'The plugin window.vim needs Vim version >= 7 .'| echohl None
-  finish
+    echohl WarningMsg | echo 'The plugin window.vim needs Vim version >= 7 .' | echohl None
+    finish
 endif
 
 " Prevent duplicate loading:
