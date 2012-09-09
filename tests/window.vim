@@ -31,12 +31,26 @@ endif
 let g:loaded_amarok_playlist = 1
 
 " script variables {{{1
-let s:debug = 0
+let s:autocommands_done = 0
+
+" Initialization {{{1 
+
+" s:CreateAutocommands() {{{2
+function! s:CreateAutocommands() abort
+    augroup PlayListAutoCmds
+        autocmd!
+        autocmd BufEnter  __PlayList__ nested call s:QuitIfOnlyWindow()
+
+    augroup END
+
+    let s:autocommands_done = 1
+
+endfunction
 
 " Window management {{{1
 " s:ToggleWindow() {{{2
 function! s:ToggleWindow() abort
-    let tagbarwinnr = bufwinnr("[PlayList]")
+    let tagbarwinnr = bufwinnr("__PlayList__")
     if tagbarwinnr != -1
         call s:CloseWindow()
         return
@@ -48,7 +62,7 @@ endfunction
 
 " s:OpenWindow() {{{2
 function! s:OpenWindow() abort
-    let tagbarwinnr = bufwinnr('[PlayList]')
+    let tagbarwinnr = bufwinnr('__PlayList__')
     if tagbarwinnr != -1
         if winnr() != tagbarwinnr
             call s:winexec(tagbarwinnr . 'wincmd w')
@@ -56,11 +70,15 @@ function! s:OpenWindow() abort
         return
     endif
 
+    if !s:autocommands_done
+        call s:CreateAutocommands()
+    endif
+
     let eventignore_save = &eventignore
     set eventignore=all
 
     let openpos = g:tagbar_left ? 'topleft vertical ' : 'botright vertical '
-    exe 'silent keepalt ' . openpos . g:tagbar_width . 'split ' . '[PlayList]'
+    exe 'silent keepalt ' . openpos . g:tagbar_width . 'split ' . '__PlayList__'
 
     let &eventignore = eventignore_save
 
@@ -98,20 +116,17 @@ function! s:InitWindow() abort
     " off, and then for every appended line (like with :put).
     setlocal foldmethod&
     setlocal foldexpr&
-    setlocal statusline=[PlayList]
 
     let cpoptions_save = &cpoptions
     set cpoptions&vim
 
     let &cpoptions = cpoptions_save
 
-    call s:CreateAutocommands()
-
 endfunction
 
 " s:CloseWindow() {{{2
 function! s:CloseWindow() abort
-    let tagbarwinnr = bufwinnr('[PlayList]')
+    let tagbarwinnr = bufwinnr('__PlayList__')
     if tagbarwinnr == -1
         return
     endif
@@ -145,22 +160,11 @@ endfunction
 
 " s:UpdateWindow() {{{2
 function! s:UpdateWindow() abort
-    let plistwinnr = bufwinnr('[PlayList]')
+    let plistwinnr = bufwinnr('__PlayList__')
     if plistwinnr == -1
         return
     endif
     echo "UpdateWindow"
-endfunction
-
-" s:CreateAutocommands() {{{2
-function! s:CreateAutocommands() abort
-    augroup TagbarAutoCmds
-        autocmd!
-        autocmd CursorHold * call
-                    \ s:UpdateWindow()
-
-    augroup END
-
 endfunction
 
 " Helper functions {{{1
@@ -172,6 +176,22 @@ function! s:winexec(cmd) abort
     execute a:cmd
 
     let &eventignore = eventignore_save
+endfunction
+
+" s:QuitIfOnlyWindow() {{{2
+function! s:QuitIfOnlyWindow() abort
+    " Check if there is more than window
+    if winbufnr(2) == -1
+        " Check if there is more than one tab page
+        if tabpagenr('$') == 1
+            " Before quitting Vim, delete the tagbar buffer so that
+            " the '0 mark is correctly set to the previous buffer.
+            bdelete
+            quitall
+        else
+            close
+        endif
+    endif
 endfunction
 
 " Global commands {{{1
