@@ -38,9 +38,13 @@ let g:loaded_amarok_playlist = 1
 
 
 " Global variables {{{1
-let g:amarok_volume_factor = 1
+if !exists('g:amarok_volume_factor')
+    let g:amarok_volume_factor = 1
+endif
 " value ms
-let g:amarok_track_factor = 1000
+if !exists('g:amarok_track_factor')
+    let g:amarok_track_factor = 1000
+endif
 " }}}1
 
 "======================================================================
@@ -211,6 +215,8 @@ except:
                 \Checking your python evironment please!\"
                 \ | echohl None")
 EOF
+    " do update
+    doautocmd CursorHold
 endfunction
 " }}}1
 
@@ -238,6 +244,8 @@ except:
                 \Checking your python evironment please!\"
                 \ | echohl None")
 EOF
+    " do update
+    doautocmd CursorHold
 endfunction
 " }}}1
 
@@ -303,8 +311,6 @@ import dbus
 import vim
 
 try:
-    # get global variable 
-    repeat = vim.eval("g:amarok_repeat_toggle")
     bus = dbus.SessionBus()
     amarok = bus.get_object("org.kde.amarok",
                 "/Player")
@@ -527,15 +533,20 @@ command! AmarokStopAfterCurrent call s:StopAfterCurrent()
 
 " ---------------------------------------------------------------------
 " Global variables {{{1
-let g:amarok_playlist_width = 30
+if !exists('g:amarok_playlist_width')
+    let g:amarok_playlist_width = 30
+endif
 " default is right side 
-let g:amarok_playlist_left = 0
+if !exists('g:amarok_playlist_left')
+    let g:amarok_playlist_left = 0
+endif
 " }}}1
 
 
 " ---------------------------------------------------------------------
 " script variables {{{1
 let s:amarok_current_track = ""
+let s:amarok_current_pos = 1
 " }}}1
 
 " ---------------------------------------------------------------------
@@ -573,51 +584,14 @@ endfunction
 " }}}1
 
 " ---------------------------------------------------------------------
-" TogglePlayList {{{1
-function! s:TogglePlayList()
-    let w_sl = bufwinnr("[PlayList]")
-    " if the buffer window exist, then close
-    if w_sl != -1
-        execute w_sl . 'wincmd w'
-        return
-    endif
-
-    let openpos = g:amarok_playlist_left ? 
-                \'topleft vertical ' : 'botright vertical '
-    exe 'silent keepalt ' . openpos . g:amarok_playlist_width . 
-                \'split ' . '[PlayList]'
-
-    " Mark the buffer as scratch
-    setlocal buftype=nofile
-    setlocal bufhidden=wipe
-    setlocal noswapfile
-    setlocal nowrap
-    setlocal nobuflisted
-    setlocal nonumber
-
-    " we just a clean status line.
-    setlocal statusline=[PlayList]
-    call s:DisPlayList()
-    " delete the first blank line
-    0,1d
-
-    call s:UpdateStatus()
-    " at last, set nomodifiable, or we can not 
-    au CursorHold *  call s:UpdateStatus()
-	setlocal nomodifiable
-	setlocal nospell
-
-endfunction
-" }}}1
-
-" ---------------------------------------------------------------------
 " UpdateStatus {{{1
 "   Get current track, then highlight it.
 function! s:UpdateStatus()
     call s:GetCurrentTrack()
-    echo s:amarok_current_track
-	highlight MyGroup ctermbg=green guibg=green
-	execute "match MyGroup /" . s:amarok_current_track . "/"
+    "echo s:amarok_current_track
+    exe s:amarok_current_pos
+    highlight MyGroup ctermbg=green guibg=green
+    execute "match MyGroup /" . s:amarok_current_track . "/"
     redraw
 endfunction
 " }}}1
@@ -638,6 +612,7 @@ try:
     title = meta['title']
     vim.command("let s:amarok_current_track = \"" + str(cur + 1) 
                 \+ ":" + title.encode('utf-8') + "\"")
+    vim.command("let s:amarok_current_pos = " + str(cur + 1)) 
 except dbus.exceptions.DBusException:
     vim.command("echohl WarningMsg | echo \"amarok not launch!\"
                 \ | echohl None")
@@ -653,15 +628,117 @@ endfunction
 " }}}1
 
 " ---------------------------------------------------------------------
-" the global commands {{{1
+" PlayTrack {{{1
+let s:amarok_play_track_num = 0
+function! s:PlayTrack()
+    let s:amarok_play_track_num = line('.')
+python << EOF
+import dbus
+import vim
 
-command! AmarokTogglePlayList          call s:TogglePlayList()
+try:
+    bus = dbus.SessionBus()
+    amarok = bus.get_object("org.kde.amarok",
+                "/TrackList")
+    line = vim.eval('s:amarok_play_track_num')
+    amarok.PlayTrack(int(line))
+except dbus.exceptions.DBusException:
+    vim.command("echohl WarningMsg | echo \"amarok not launch!\"
+                \ | echohl None")
+except dbus.exceptions.UnknownMethodException:
+    vim.command("echohl WarningMsg | echo \"Unknown method?!\"
+                \ | echohl None")
+except:
+    vim.command("echohl WarningMsg | echo \"Unexpected eception!\"
+                \ | echohl None")
 
+EOF
+endfunction
 " }}}1
 
+" ---------------------------------------------------------------------
+" ToggleLoop {{{1 
+function! s:ToggleLoop()
+python << EOF
+import dbus
+import vim
+
+try:
+    bus = dbus.SessionBus()
+    amarok = bus.get_object("org.kde.amarok",
+                "/Player")
+
+    # get Loop mode status
+    stats = amarok.GetStatus()
+    # (0,0,0,0[loop]) the repeat mode in third
+    stats = stats[3]
+    amarok = bus.get_object("org.kde.amarok",
+                "/TrackList")
+    if stats == 1:
+        amarok.SetLoop(False)
+        vim.command("echohl Question | 
+                    \ echo \"Amarok: Loop OFF\" | echohl None")
+    elif stats == 0:
+        amarok.SetLoop(True)
+        vim.command("echohl WarningMsg | 
+                    \ echo \"Amarok: Loop ON\" | echohl None")
+except dbus.exceptions.DBusException:
+    vim.command("echohl WarningMsg | echo \"amarok not launch!\"
+                \ | echohl None")
+except dbus.exceptions.UnknownMethodException:
+    vim.command("echohl WarningMsg | echo \"Unknown method?!\"
+                \ | echohl None")
+except:
+    vim.command("echohl WarningMsg | echo \"Unknown exception! 
+                \Checking your python evironment please!\"
+                \ | echohl None")
+EOF
+endfunction
+" }}}1
+
+" ---------------------------------------------------------------------
+" ToggleRandom {{{1 
+function! s:ToggleRandom()
+python << EOF
+import dbus
+import vim
+
+try:
+    bus = dbus.SessionBus()
+    amarok = bus.get_object("org.kde.amarok",
+                "/Player")
+
+    # get Random mode status
+    stats = amarok.GetStatus()
+    # (0,0[random],0,0) the repeat mode in third
+    stats = stats[1]
+
+    amarok = bus.get_object("org.kde.amarok",
+                "/TrackList")
+    if stats == 1:
+        amarok.SetRandom(False)
+        vim.command("echohl Question | 
+                    \ echo \"Amarok: Random OFF\" | echohl None")
+    elif stats == 0:
+        amarok.SetRandom(True)
+        vim.command("echohl WarningMsg | 
+                    \ echo \"Amarok: Random ON\" | echohl None")
+except dbus.exceptions.DBusException:
+    vim.command("echohl WarningMsg | echo \"amarok not launch!\"
+                \ | echohl None")
+except dbus.exceptions.UnknownMethodException:
+    vim.command("echohl WarningMsg | echo \"Unknown method?!\"
+                \ | echohl None")
+except:
+    vim.command("echohl WarningMsg | echo \"Unknown exception! 
+                \Checking your python evironment please!\"
+                \ | echohl None")
+EOF
+endfunction
+" }}}1
 "======================================================================
 " Below code from Tagbar & taglist.
-" Thanks the author of Tagbar & taglist:
+" Thanks the authors of Tagbar & taglist:
 " Jan Larres & Yegappan Lakshmanan
 "======================================================================
 " script variables {{{1
@@ -674,7 +751,7 @@ function! s:CreateAutocommands() abort
     augroup PlayListAutoCmds
         autocmd!
         autocmd BufEnter  __PlayList__ nested call s:QuitIfOnlyWindow()
-
+        autocmd CursorHold * call s:AutoUpdate()
     augroup END
 
     let s:autocommands_done = 1
@@ -711,14 +788,20 @@ function! s:OpenWindow() abort
     let eventignore_save = &eventignore
     set eventignore=all
 
-    let openpos = g:tagbar_left ? 'topleft vertical ' : 'botright vertical '
-    exe 'silent keepalt ' . openpos . g:tagbar_width . 'split ' . '__PlayList__'
+    let openpos = g:amarok_playlist_left ? 'topleft vertical ' : 'botright vertical '
+    exe 'silent keepalt ' . openpos . g:amarok_playlist_width . 'split ' . '__PlayList__'
 
     let &eventignore = eventignore_save
 
     call s:InitWindow()
 
     call s:winexec('wincmd p')
+
+    " update play list
+    call s:UpdatePlayList()
+
+    " do auto update
+    doautocmd CursorHold
 
 endfunction
 
@@ -754,6 +837,7 @@ function! s:InitWindow() abort
     let cpoptions_save = &cpoptions
     set cpoptions&vim
 
+    call s:MapKeys()
     let &cpoptions = cpoptions_save
 
 endfunction
@@ -792,15 +876,63 @@ function! s:CloseWindow() abort
 
 endfunction
 
-" s:UpdateWindow() {{{2
-function! s:UpdateWindow() abort
-    let plistwinnr = bufwinnr('__PlayList__')
-    if plistwinnr == -1
+" s:UpdatePlayList() {{{2
+function! s:UpdatePlayList() abort
+    let winnr = bufwinnr('__PlayList__')
+    if winnr == -1
         return
     endif
-    echo "UpdateWindow"
+
+    " append playlist to the right window, then jump back.
+    " get current window number
+    let savewin = bufwinnr('%')
+    call s:winexec(winnr . 'wincmd w')
+    setlocal modifiable
+    call s:DisPlayList()
+    0,1d
+    setlocal nomodifiable
+
+    " jump back
+    call s:winexec(savewin . 'wincmd w')
 endfunction
 
+" s:AutoUpdate() {{{2
+function! s:AutoUpdate() abort
+    let winnr = bufwinnr('__PlayList__')
+    if winnr == -1
+        return
+    endif
+
+    " UpdaetStatus
+    " get current window number
+    let savewin = bufwinnr('%')
+    call s:winexec(winnr . 'wincmd w')
+    call s:UpdateStatus()
+
+    " jump back
+    call s:winexec(savewin . 'wincmd w')
+
+endfunction
+
+" Map keys {{{2
+function! s:MapKeys() abort
+    nnoremap <script> <silent> <buffer> >    :call <SID>Next()<CR>
+    nnoremap <script> <silent> <buffer> <    :call <SID>Prev()<CR>
+    nnoremap <script> <silent> <buffer> ]    :call <SID>Forward()<CR>
+    nnoremap <script> <silent> <buffer> [    :call <SID>Backward()<CR>
+    nnoremap <script> <silent> <buffer> +    :call <SID>VolumeUp()<CR>
+    nnoremap <script> <silent> <buffer> -    :call <SID>VolumeDown()<CR>
+    nnoremap <script> <silent> <buffer> p    :call <SID>Play()<CR>
+    nnoremap <script> <silent> <buffer> s    :call <SID>Stop()<CR>
+    nnoremap <script> <silent> <buffer> r    :call <SID>ToggleRepeat()<CR>
+    nnoremap <script> <silent> <buffer> m    :call <SID>ToggleMute()<CR>
+    nnoremap <script> <silent> <buffer> o    :call <SID>ShowOSD()<CR>
+    nnoremap <script> <silent> <buffer> $    :call <SID>StopAfterCurrent()<CR>
+    nnoremap <script> <silent> <buffer> L    :call <SID>ToggleLoop()<CR>
+    nnoremap <script> <silent> <buffer> R    :call <SID>ToggleRandom()<CR>
+    nnoremap <script> <silent> <buffer> <CR>    :call <SID>PlayTrack()<CR>
+    nnoremap <script> <silent> <buffer> <Space>    :call <SID>Pause()<CR>
+endfunction
 " Helper functions {{{1
 " s:winexec() {{{2
 function! s:winexec(cmd) abort
