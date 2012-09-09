@@ -506,26 +506,6 @@ EOF
 endfunction
 " }}}1
 
-" ---------------------------------------------------------------------
-" the global commands {{{1
-
-command! AmarokShowOSD          call s:ShowOSD()
-command! AmarokVolumeDown       call s:VolumeDown()
-command! AmarokVolumeUp         call s:VolumeUp()
-command! AmarokPlay             call s:Play()
-command! AmarokPause            call s:Pause()
-command! AmarokNext             call s:Next()
-command! AmarokPrev             call s:Prev()
-command! AmarokStop             call s:Stop()
-command! AmarokToggleMute       call s:ToggleMute()
-command! AmarokToggleRepeat     call s:ToggleRepeat()
-command! AmarokGetMetadata      call s:GetMetadata()
-command! AmarokPositionGet      call s:PositionGet()
-command! AmarokForward          call s:Forward()
-command! AmarokBackward         call s:Backward()
-command! AmarokStopAfterCurrent call s:StopAfterCurrent()
-" }}}1
-
 "======================================================================
 " org.kde.amarok
 " /TrackList

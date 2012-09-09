@@ -1,0 +1,163 @@
+vimarok.txt     Show playlist and control amarok from vim via dbus-python.
+
+Author:     Lei Liu <liunx163@163.com>
+License:    Vim license, see license
+Homepage:   https://github.com/liunx/Vimarok
+Version:    0.1.0
+
+==============================================================================
+Contents                                            vimarok vimarok-contents
+        1. Intro ............................ vimarok-intro
+            Supported features .............. vimarok-features 
+        2. Requirements ..................... vimarok-requirements
+        3. Installation ..................... vimarok-installation
+        4. Usage ............................ vimarok-usage
+            Commands ........................ vimarok-commands
+            Key mappings .................... vimarok-keys
+        5. Configuration .................... vimarok-configuration
+        6. Troubleshooting & Know issues .... vimarok-issues
+        7. History .......................... vimarok-history
+        8. Todo ............................. vimarok-todo
+        9. Credits .......................... vimarok-credits
+==============================================================================
+1. Intro                                                vimarok-intro
+
+Vimarok is a plugin that used to control amarok music player. I am not means 
+to make vim as a music player, I just let vim to cooperate with amarok,
+luckly, vim has many interfaces to other languages, so I use dbus-python to
+join them together. If you like listen music while playing with vim, please
+have a try.
+
+------------------------------------------------------------------------------
+SUPPORTED FEATURES                                      vimarok-features
+
+It has the basic features like:
+
+  - play,pause,next,prev,back/forword etc.
+  - show playlist in side bar.
+  - select & play the track in playlist.
+
+==============================================================================
+2. Requirements                                         vimarok-requirements
+
+You need vim version > 7.0 and with +python feature compiled, also your 
+sytem need to support dbus and has amarok with dbus feature installed,
+dbus-python module is needed. 
+
+==============================================================================
+3. Installation                                         vimarok-installation
+
+Just put the files from plugin, doc, in right place, then restart your vim.
+
+==============================================================================
+4. Usage                                                vimarok-usage
+
+When you doing some work with vim while listening music, and you don't want
+to do switch between vim and amarok, in this situaction, you may want to do
+it in vim way. In this time, you can just type ":TogglePlayList" to start 
+up the playlist, and do something you like.
+
+------------------------------------------------------------------------------
+COMMANDS                                                vimarok-commands
+
+:Toggleplaylist                                         :Toggleplaylist
+    Toggle the play list window.
+
+------------------------------------------------------------------------------
+KEY MAPPINGS                                            vimarok-keys
+
+The keys below are just work in the playlist window.
+
+    >  : play next track'
+    <  : play previous track'
+    ]  : play forward'
+    [  : play backward'
+    +  : volume up'
+    -  : volume down'
+    p  : play'
+    s  : stop'
+    r  : toggle single track repeat'
+    m  : toggle mute'
+    o  : show amarok OSD'
+    $  : stop after current track'
+    L  : toggle play list loop mode'
+    R  : toggle play list random mode'
+    <CR>   : play track'
+    <Space> : switch between play & pause'
+    F1 : toggle the help contents'
+
+==============================================================================
+5. Configuration                                        vimarok-configuration
+
+                                                    g:amarok_volume_factor
+g:amarok_volume_factor
+Default: 1
+
+This option is a delta value when you volume up/down by.
+
+Example:
+
+        let g:amarok_volume_factor = 2
+
+
+                                                    g:amarok_track_factor
+g:amarok_track_factor
+Default: 1000
+
+This option is a delta value when play for/backward. Remember that the unit
+is ms, so it's better not to make it too small.
+
+Example:
+
+        let g:amarok_volume_factor = 2000
+
+
+                                                    g:amarok_playlist_width 
+g:amarok_playlist_width
+Default: 30
+
+This option define the width of playlist window.
+
+Example:
+
+        let g:amarok_playlist_width = 30
+
+
+                                                    g:amarok_playlist_left 
+g:amarok_playlist_left
+Default: 0
+
+By default, the playlist will open in right-hand side.
+
+Example:
+
+        let g:amarok_playlist_left = 1
+
+
+
+==============================================================================
+6. Troubleshooting & Know issues                        vimarok-issues
+
+==============================================================================
+7. History                                              vimarok-history
+
+==============================================================================
+8. Todo                                                 vimarok-todo
+
+==============================================================================
+9. Credits                                              vimarok-credits
+
+This plugin's window manage function was heavily inspired by the 'Tagbar' 
+& 'Taglist' plugin by Jan Larres & Yegappan Lakshmanan and uses a few amount 
+of code from them.
+
+Original taglist copyright notice:
+Permission is hereby granted to use and distribute this code, with or without
+modifications, provided that this copyright notice is copied with it. Like
+anything else that's free, taglist.vim is provided *as is* and comes with no
+warranty of any kind, either expressed or implied. In no event will the
+copyright holder be liable for any damamges resulting from the use of this
+software.
+
+==============================================================================
+ vim: tw=78 ts=8 sw=4 sts=4 et ft=help
