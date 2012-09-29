@@ -869,6 +869,7 @@ function! s:UpdatePlayList() abort
     let savewin = bufwinnr('%')
     call s:winexec(winnr . 'wincmd w')
     setlocal modifiable
+    silent %delete _
     silent 0put = '\" Press F1 for help'
     call s:DisPlayList()
     setlocal nomodifiable
